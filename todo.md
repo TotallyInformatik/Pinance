@@ -65,7 +65,6 @@ If it is, provide me the same information in the text but as a list of json obje
   date: string,
   description: string,
   value: number,
-  currency: string,
 }
 where value is the value either deducted (negative) from the account or the value added (positive) to the account and currency is the currency this account operates on.
 

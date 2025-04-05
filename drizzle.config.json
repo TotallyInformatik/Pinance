@@ -1,0 +1,9 @@
+{
+  "schema": "./lib/db/schema.ts",
+  "out": "./lib/db/migrations",
+  "driver": "durable-sqlite",
+  "dbCredentials": {
+    "url": "sqlite.db"
+  },
+  "dialect": "sqlite"
+}
