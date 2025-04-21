@@ -1,115 +1,150 @@
 import Database from '@tauri-apps/plugin-sql';
+import { convertToISO8601, DEFAULT_CURRENCY, pad0 } from '../utils';
 // when using `"withGlobalTauri": true`, you may use
 // const Database = window.__TAURI__.sql;
 
+const DB_URL = 'sqlite:pinancedatabase.db';
+let db: Database;
 
-export async function createTables() {
-  const db = await Database.load('sqlite:database.db');
+export async function initDB() {
+
+  db = await Database.load(DB_URL);
+
+  // todo: add balance attribute which the person just has to enter...
+  // todo: extract month and year selector out of card
+
   await db.execute(
     `CREATE TABLE IF NOT EXISTS accounts (
-        id INTEGER PRIMARY KEY,
-        currency TEXT NOT NULL,
-        title TEXT NOT NULL,
-        total REAL NOT NULL CHECK(total = ROUND(total, 2))
+      id INTEGER PRIMARY KEY,
+      currency TEXT NOT NULL,
+      title TEXT NOT NULL UNIQUE
     );
     CREATE TABLE IF NOT EXISTS transaction_history (
-        id INTEGER PRIMARY KEY,
-        account_id INTEGER,
-        date TEXT,
-        value REAL NOT NULL CHECK(value = ROUND(value, 2)),
-        description TEXT,
-        type TEXT,
-        FOREIGN KEY (account_id) REFERENCES accounts(id),
-        FOREIGN KEY (type) REFERENCES transaction_type(type)
+      id INTEGER PRIMARY KEY,
+      date TEXT NOT NULL,
+      value REAL NOT NULL CHECK(value = ROUND(value, 2)),
+      description TEXT,
+      type TEXT,
+      account_id INTEGER,
+      FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+      FOREIGN KEY (type) REFERENCES transaction_type(type) ON DELETE SET NULL
+    );
+    CREATE TABLE IF NOT EXISTS total_history (
+      total REAL NOT NULL CHECK(total = ROUND(total, 2)),
+      month INTEGER NOT NULL CHECK(month <= 12 AND month >= 1),
+      year INTEGER NOT NULL,
+      account_id INTEGER,
+      FOREIGN KEY (account_id) REFERENCES account(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS transaction_type (
         type TEXT PRIMARY KEY
-    );`
+    );
+    `
   )
 }
 
-export async function addType(t: string) {
 
-  const db = await Database.load('sqlite:database.db');
-  await db.execute("INSERT INTO transaction_type (type) VALUES ($1)", [t])
+export type last_insert_rowid = {
+  "last_insert_rowid()": number
+}[]
+
+
+// #region Accounts
+
+export type shortAccount = {
+  title: string,
+  id: number,
 }
-
-export async function getTypes() {
-
-  const db = await Database.load('sqlite:database.db');
-  const result = await db.select("SELECT type FROM transaction_type")
+export type shortAccountList = shortAccount[];
+export async function getAccountList() {
+  const result = await db.select("SELECT id, title FROM accounts");
   return result;
 }
 
 
-// use rusqlite::{params, Connection, Result};
-// use std::fs;
+export type account = {
+  id: number,
+  currency: string,
+  title: string,
+  total: string
+}
+export type accountList = account[];
+
+export async function getAccount(id: number) {
+  const result = await db.select("SELECT id, currency, title, total FROM accounts WHERE id = $1", [id]);
+  return (result as accountList)[0];
+}
+
+export async function addAccount(title: string, currency: string = DEFAULT_CURRENCY, total: number = 0) {
+  await db.execute("INSERT INTO accounts (currency, title, total) VALUES ($1, $2, $3)", [currency, title, total]);
+  const result = await db.select("SELECT id, title FROM accounts WHERE title = $1", [title])
+  return (result as shortAccountList)[0];
+}
+
+export async function removeAccountById(id: number) {
+  await db.execute("DELETE FROM accounts WHERE id = $1", [id]);
+}
+
+// #endregion
 
 
-// pub fn create_db() -> Result<Connection> {
+// #region Transaction History
 
-//     // Get the user-specific data directory
-//     let user_data_dir = data_dir().ok_or("Unable to get user data directory")?;
+export type transaction = {
+  id: number
+  date: string,
+  value: number,
+  type: string | null,
+  description: string,
+}
+export type transactionList = transaction[]
 
-//     // Create a path for your database under the user-specific data directory
-//     let db_path = user_data_dir.join("pinance").join("database.db");
+export async function addTransaction(date: string, value: number, type: string | null, description: string, account_id: number) {
+  await db.execute("INSERT INTO transaction_history (date, value, description, type, account_id) VALUES ($1,$2,$3,$4,$5)", [convertToISO8601(date), value, description, type, account_id])
+  const idData = await db.select("SELECT last_insert_rowid()") as last_insert_rowid;
+  return idData[0]['last_insert_rowid()']
+}
 
-//     // Make sure the directory exists
-//     if !db_path.parent().unwrap().exists() {
-//         fs::create_dir_all(db_path.parent().unwrap());
-//     }
+export async function getTransactionsByAccountWithinMonth(year: number, month: number, account_id: number) {
+  // precondition: month is in normal notation, not index
+  const results = await db.select("SELECT id, strftime('%d.%m.%Y', date) as date, value, description, type FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3)", [account_id, pad0(month.toString()), year.toString()])
+  return results as transactionList;
+}
 
-//     let conn = Connection::open(&db_path)?;
+export async function getTransactionsWithinMonth(year: number, month: number) {
+  // precondition: month is in normal notation, not index
+  const results = await db.select("SELECT id, strftime('%d.%m.%Y', date) as date, value, description, type FROM transaction_history WHERE (strftime('%m', date) == $2 AND strftime('%Y', date) == $3)", [pad0(month.toString()), year.toString()])
+  return results as transactionList;
+}
 
-//     conn.execute(
-//         "CREATE TABLE IF NOT EXISTS accounts (
-//             id INTEGER PRIMARY KEY,
-//             currency TEXT NOT NULL,
-//             title TEXT NOT NULL,
-//             total REAL NOT NULL CHECK(total = ROUND(total, 2))
-//         )",
-//         params![],
-//     )?;
-//     conn.execute(
-//         "CREATE TABLE IF NOT EXISTS transaction_history (
-//             id INTEGER PRIMARY KEY,
-//             account_id INTEGER,
-//             date TEXT,
-//             value REAL NOT NULL CHECK(value = ROUND(value, 2)),
-//             description TEXT,
-//             type TEXT,
-//             FOREIGN KEY (account_id) REFERENCES accounts(id),
-//             FOREIGN KEY (type) REFERENCES transaction_type(type)
-//         )",
-//         params![],
-//     )?;
-//     conn.execute(
-//         "CREATE TABLE IF NOT EXISTS transaction_type (
-//             type TEXT PRIMARY KEY
-//         )",
-//         params![],
-//     )?;
+export async function removeTransaction(id: number) {
+  await db.execute("DELETE FROM transaction_history WHERE id = $1", [id])
+}
 
-//     return Ok(conn);
-// }
+export async function updateTransaction(id: number, date: string, value: number, type: string | null, description: string) {
+  await db.execute("UPDATE transaction_history SET date=$1, value=$2, type=$3, description=$4 WHERE id = $5", [convertToISO8601(date), value, type, description, id])
+}
 
-// pub fn insert_type(conn: &Connection, t: String) -> Result<usize> {
 
-//     return conn.execute(
-//         "INSERT INTO transaction_type (type) VALUES (?1)", params![t]
-//     );
 
-// }
 
-// pub fn fetch_types(conn: &Connection) -> Result<Vec<String>> {
+// #endregion
 
-//     let mut stmt = conn.prepare("SELECT type FROM transaction_type")?;
-//     let type_iter = stmt.query_map(params![], |row| row.get(0))?;
 
-//     let mut types = Vec::new();
-//     for t in type_iter {
-//         types.push(t?);
-//     }
-//     return Ok(types)
+// #region Transaction Types
 
-// }
+export async function addTransactionType(t: string) {
+  await db.execute("INSERT INTO transaction_type (type) VALUES ($1)", [t])
+}
+
+export type transactionType = {
+  type: string
+}
+export type transactionTypeList = transactionType[];
+export async function getTransactionTypes() {
+  const result = await db.select("SELECT type FROM transaction_type")
+  return (result as transactionTypeList);
+}
+
+// #endregion
+
