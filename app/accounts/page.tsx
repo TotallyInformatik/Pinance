@@ -72,7 +72,7 @@ export default function Account() {
   } else {
     return <>
     <div className='flex flex-col gap-7'>
-        <div className='flex justify-between items-end mb-10'>
+        <div className='flex justify-between items-end mb-4'>
           <h1 className='text-4xl font-bold'>{accountData.title}</h1>
         </div>
 

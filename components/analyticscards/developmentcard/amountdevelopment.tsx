@@ -20,7 +20,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { PageContext } from "@/app/accounts/page"
-import { getTotalsByAccountAndYear } from "@/lib/db/sqlite"
 
 const chartConfig = {
   wealth: {
@@ -45,16 +44,16 @@ export function WelathDevelopmentCard(
   useEffect(() => {
 
     (async () => {
-      const totals = await getTotalsByAccountAndYear(new Date().getFullYear(), context.accountData.id);
+      // const totals = await getTotalsByAccountAndYear(new Date().getFullYear(), context.accountData.id);
       
-      const newChartData = totals.map((t) => {
-        return {
-          wealth: t.total,
-          date: `${t.month}-${t.year}`
-        }
-      })
+      // const newChartData = totals.map((t) => {
+      //   return {
+      //     wealth: t.total,
+      //     date: `${t.month}-${t.year}`
+      //   }
+      // })
 
-      setChartData(newChartData)
+      // setChartData(newChartData)
       
     })()
 

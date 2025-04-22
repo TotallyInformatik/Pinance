@@ -77,7 +77,7 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
             <SidebarMenuItem className="w-full">
               <SidebarMenuButton className="flex items-center" onClick={() => router.push("/")}>
                 <LayoutDashboard/>
-                <p>Dashboard</p>
+                <p>Home</p>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

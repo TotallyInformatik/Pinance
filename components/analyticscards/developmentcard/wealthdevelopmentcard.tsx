@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { PageContext } from "@/app/accounts/page"
-import { getTotalsByAccountAndYear } from "@/lib/db/sqlite"
+import { getTotalsByYear } from "@/lib/db/sqlite"
 
 const chartConfig = {
   wealth: {
@@ -36,7 +36,6 @@ export function WealthDevelopmentCard(
     className?: string
   }) {
 
-  const context = useContext(PageContext);
   const [chartData, setChartData] = useState<{
     wealth: number,
     date: string
@@ -45,7 +44,7 @@ export function WealthDevelopmentCard(
   useEffect(() => {
 
     (async () => {
-      const totals = await getTotalsByAccountAndYear(new Date().getFullYear(), context.accountData.id);
+      const totals = await getTotalsByYear(new Date().getFullYear());
       
       const newChartData = totals.map((t) => {
         return {
@@ -59,12 +58,12 @@ export function WealthDevelopmentCard(
     })()
 
 
-  }, [context.month, context.year, context.reload])
+  }, [])
 
   return (
     <Card className={cn(className, "p-8")}>
       <div>
-        <h2 className='text-3xl font-bold justify-self-start mb-1'>Wealth</h2>
+        <h2 className='text-3xl font-bold justify-self-start mb-1'>Wealth Development</h2>
         <p className="text-muted-foreground">See the development of your wealth</p>
       </div>
       <ChartContainer config={chartConfig}>

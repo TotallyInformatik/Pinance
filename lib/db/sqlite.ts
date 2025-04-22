@@ -104,7 +104,7 @@ export type totalList = total[]
 
 export async function getTotalByAccountAndMonth(month: number, year: number, account_id: number) {
   const result = await db.select("SELECT total, month, year, account_id FROM total_history WHERE (month=$1 AND year=$2 AND account_id=$3)", [month, year, account_id])
-  console.log(result);
+  // console.log(result);
   const typedResult = (result as totalList);
   if (typedResult.length > 0) {
     return typedResult[0];
@@ -114,10 +114,9 @@ export async function getTotalByAccountAndMonth(month: number, year: number, acc
 
 }
 
-export async function getTotalsByAccountAndYear(year: number, account_id: number) {
-  console.log(account_id)
-  const result = await db.select("SELECT total, month, year, account_id FROM total_history WHERE account_id=$1 AND year=$2", [account_id, year])
-  console.log(result);
+export async function getTotalsByYear(year: number) {
+  const result = await db.select("SELECT * FROM total_history WHERE year=$1", [year])
+  // console.log(result);
   const typedResult = (result as totalList);
   return typedResult;
 }
