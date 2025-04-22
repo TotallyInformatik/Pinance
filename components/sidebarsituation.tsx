@@ -66,7 +66,7 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
 
 
   return <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-    <Sidebar collapsible="offcanvas" variant="inset" className="bg-sidebar-border">
+    <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader className="flex flex-row items-center">
         <BadgeEuro />
         <h1 className="text-xl font-semibold">πnance</h1>
@@ -74,12 +74,6 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            <SidebarMenuItem className="w-full">
-              <SidebarMenuButton className="flex items-center" onClick={() => router.push("/files")}>
-                <Files/>
-                <p>Files</p>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem className="w-full">
               <SidebarMenuButton className="flex items-center" onClick={() => router.push("/")}>
                 <LayoutDashboard/>
