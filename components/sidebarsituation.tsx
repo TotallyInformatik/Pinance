@@ -66,7 +66,7 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
 
 
   return <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-    <Sidebar collapsible="offcanvas" variant="inset">
+    <Sidebar collapsible="offcanvas" variant="inset" className="bg-sidebar-border">
       <SidebarHeader className="flex flex-row items-center">
         <BadgeEuro />
         <h1 className="text-xl font-semibold">πnance</h1>
