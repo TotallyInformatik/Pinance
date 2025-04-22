@@ -60,8 +60,6 @@ export function pad0(n: string) {
   return n.padStart(2, "0");
 }
 
-
-
 export function convertToISO8601(date: string) {
   try {
 

@@ -5,7 +5,6 @@ import { ReactNode, useEffect, useState } from "react";
 import { Combobox } from "../ui/combobox";
 import { getTransactionTypes, transactionTypeList } from "@/lib/db/sqlite";
 import { Label } from "../ui/label";
-import { DialogDescription } from "@radix-ui/react-dialog";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { convertToDate, convertToISO8601, pad0 } from "@/lib/utils";

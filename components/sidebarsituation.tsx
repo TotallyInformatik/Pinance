@@ -38,7 +38,7 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (accounts.some((account: shortAccount) => { return account.title == values.title })) {
-      toast.error("Refused: Account with the same name already exists.")
+      toast.error("Error: Account with the same name already exists.")
     } else {
       const result = await addAccount(values.title);
       accounts.push(result);
@@ -167,23 +167,27 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
       </SidebarFooter>
     </Sidebar>
     <SidebarInset>
-      <SidebarHeader className="flex flex-row items-start justify-between px-8">
-        <div className="w-fit flex flex-row items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => {
-            setSidebarOpen(!sidebarOpen);
-          }}>
-            <Menu />
-          </Button>
-          <Separator orientation="vertical" className="h-full data-[orientation=vertical]:h-6" />
-        </div>
-        <ThemeToggler />
-      </SidebarHeader>
-      <SidebarContent>
+      <div className="h-[calc(100vh-50px)]">
+        <SidebarHeader className="flex flex-row items-start justify-between px-8">
+          <div className="w-fit flex flex-row items-center gap-3">
+            <Button variant="outline" size="icon" onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+            }}>
+              <Menu />
+            </Button>
+            <Separator orientation="vertical" className="h-full data-[orientation=vertical]:h-6" />
+          </div>
+          <ThemeToggler />
+        </SidebarHeader>
         <Separator className="h-2"/>
-        <div className="p-8 h-full">
-          {children}
-        </div>
-      </SidebarContent>
+        <SidebarContent className="h-[calc(100%-20px)]">
+          <ScrollArea className="h-full">
+            <div className="p-8">
+              {children}
+            </div>
+          </ScrollArea>
+        </SidebarContent>
+      </div>
     </SidebarInset>
   </SidebarProvider>
 }

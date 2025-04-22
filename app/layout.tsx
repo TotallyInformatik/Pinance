@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/themeprovider";
 import { SidebarSituation } from "@/components/sidebarsituation";
 import { useEffect, useState } from "react";
-import { initDB } from "@/lib/db/sqlite";
+import { getAllTransactions, initDB } from "@/lib/db/sqlite";
 import { Toaster } from "sonner";
 import { Loading } from "@/components/loading";
 
@@ -19,6 +19,10 @@ export default function RootLayout({
     (async () => {
       await initDB();
       setDBLoaded(true);
+
+      const transactions = await getAllTransactions()
+      console.log(transactions)
+
     })();
 
   }, [])

@@ -55,7 +55,7 @@ export const getColumns = (
       },
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("value"))
-        const formatted = new Intl.NumberFormat("en-US", {
+        const formatted = new Intl.NumberFormat("de-DE", {
           style: "currency",
           currency: currency,
         }).format(amount)
@@ -87,7 +87,14 @@ export const getColumns = (
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
+                
                 <DropdownMenuContent align="end">
+
+                <DropdownMenuItem>
+                    <DialogTrigger>
+                      Edit Transaction
+                    </DialogTrigger>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => {
                     const id = originalRow.id;
                     const newData = data.filter((d) => d.id != id)
@@ -95,11 +102,6 @@ export const getColumns = (
                     removeTransaction(id);
 
                   }}>Delete Transaction</DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <DialogTrigger>
-                      Edit Transaction
-                    </DialogTrigger>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <TransactionDialog

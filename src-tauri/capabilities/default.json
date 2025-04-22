@@ -9,7 +9,12 @@
     "fs:default",
     "core:default",
     "sql:default",
-    "sql:allow-execute"
+    "sql:allow-execute",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://*.tauri.app" }, {"url": "http://127.0.0.1:8000"}],
+      "deny": [{ "url": "https://private.tauri.app" }]
+    }
   ],
   "platforms": [
     "linux",

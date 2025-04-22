@@ -34,13 +34,18 @@ export async function initDB() {
       month INTEGER NOT NULL CHECK(month <= 12 AND month >= 1),
       year INTEGER NOT NULL,
       account_id INTEGER,
-      FOREIGN KEY (account_id) REFERENCES account(id) ON DELETE CASCADE
+
+      FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+      PRIMARY KEY (month, year, account_id)
     );
     CREATE TABLE IF NOT EXISTS transaction_type (
         type TEXT PRIMARY KEY
     );
     `
   )
+
+  // todo: migrations or smth. idk
+
 }
 
 
@@ -66,7 +71,6 @@ export type account = {
   id: number,
   currency: string,
   title: string,
-  total: string
 }
 export type accountList = account[];
 
@@ -84,6 +88,39 @@ export async function addAccount(title: string, currency: string = DEFAULT_CURRE
 export async function removeAccountById(id: number) {
   await db.execute("DELETE FROM accounts WHERE id = $1", [id]);
 }
+
+// #endregion
+
+
+// #region Total History
+
+export type total = {
+  id: number,
+  total: number,
+  month: number,
+  year: number,
+  account_id: number,
+}
+export type totalList = total[]
+
+export async function getTotalByAccountAndMonth(month: number, year: number, account_id: number) {
+  const result = await db.select("SELECT total, month, year, account_id FROM total_history WHERE (month=$1 AND year=$2 AND account_id=$3)", [month, year, account_id])
+  const typedResult = (result as totalList);
+  if (typedResult.length > 0) {
+    return typedResult[0];
+  } else {
+    return undefined;
+  }
+
+}
+
+export async function setTotalByAccountAndMonth(month: number, year: number, account_id: number, total: number) {
+
+  
+
+  await db.execute("INSERT INTO total_history (total, account_id, month, year) VALUES ($1, $2, $3, $4) ON CONFLICT(month, year, account_id) DO UPDATE SET total = excluded.total", [total, account_id, month, year])
+}
+
 
 // #endregion
 
@@ -117,6 +154,11 @@ export async function getTransactionsWithinMonth(year: number, month: number) {
   return results as transactionList;
 }
 
+export async function getAllTransactions() {
+  const results = await db.select("SELECT * FROM transaction_history")
+  return results
+}
+
 export async function removeTransaction(id: number) {
   await db.execute("DELETE FROM transaction_history WHERE id = $1", [id])
 }
@@ -124,8 +166,6 @@ export async function removeTransaction(id: number) {
 export async function updateTransaction(id: number, date: string, value: number, type: string | null, description: string) {
   await db.execute("UPDATE transaction_history SET date=$1, value=$2, type=$3, description=$4 WHERE id = $5", [convertToISO8601(date), value, type, description, id])
 }
-
-
 
 
 // #endregion
