@@ -1,14 +1,13 @@
 import { Send } from "lucide-react"
-import { Button } from "../ui/button"
-import { Card } from "../ui/card"
-import { Input } from "../ui/input"
+import { Button } from "../../ui/button"
+import { Card } from "../../ui/card"
+import { Input } from "../../ui/input"
 import { useContext, useState } from "react"
 import { fetch } from "@tauri-apps/plugin-http"
-import { Loading } from "../loading"
+import { Loading } from "../../loading"
 import { PageContext } from "@/app/accounts/page"
 import { addTransaction, setTotalByAccountAndMonth } from "@/lib/db/sqlite"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 export const AICard = ({
@@ -17,12 +16,11 @@ export const AICard = ({
   className?: string
 }) => {
 
-  const [text, setText] = useState<string>('');
+
   const [loading, setLoading] = useState<boolean>(false);
   const [file, setFile] = useState<File | undefined>();
 
   const context = useContext(PageContext);
-  const router = useRouter();
 
   const handleFileUpload = async () => {
     
@@ -55,8 +53,6 @@ export const AICard = ({
     const json = await dataResponse.json()
     const jsonData = JSON.parse(json.result);
 
-    console.log(jsonData);
-
     if (jsonData.status == "OK") {
       await Promise.all(jsonData.transactions.map((transaction: any) => 
         addTransaction(transaction.date, transaction.value, transaction.type, transaction.description, context.accountData.id)
@@ -79,7 +75,7 @@ export const AICard = ({
   
   return <Card className={cn("p-8 gap-4", className)}>
     <div>
-      <h2 className='text-3xl font-bold justify-self-start mb-1'>Bank Statement:</h2>
+      <h2 className='text-3xl font-bold justify-self-start mb-1'>Bank Statement</h2>
       <p className="text-muted-foreground text-sm">Upload your bank statement for this month:</p>
     </div>
     <form className="w-full flex justify-between gap-2" onSubmit={e => {
@@ -95,8 +91,5 @@ export const AICard = ({
         }
       </Button>
     </form>
-    <p>
-        {text}
-    </p>
   </Card>
 }

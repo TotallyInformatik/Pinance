@@ -20,9 +20,6 @@ export default function RootLayout({
       await initDB();
       setDBLoaded(true);
 
-      const transactions = await getAllTransactions()
-      console.log(transactions)
-
     })();
 
   }, [])

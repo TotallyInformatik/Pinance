@@ -2,8 +2,8 @@
 
 import { removeTransaction, transaction, updateTransaction } from "@/lib/db/sqlite"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
-import { Button } from "../ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../../ui/dropdown-menu"
+import { Button } from "../../ui/button"
 import { ArrowUpDown, MoreHorizontal } from "lucide-react"
 import { Dispatch, SetStateAction, useState } from "react"
 import { TransactionDialog } from "./transactiondialog"
@@ -43,7 +43,6 @@ export const getColumns = (
             <Button
               variant="ghost"
               onClick={() => {
-                console.log(column.getIsSorted());
                 column.toggleSorting(column.getIsSorted() === "asc")
               }}
             >

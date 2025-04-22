@@ -9,7 +9,7 @@ import assert from 'assert';
 import { useContext, useEffect, useState } from 'react';
 import { getColumns } from './columns';
 import { DataTable } from './data-table';
-import { Separator } from '../ui/separator';
+import { Separator } from '../../ui/separator';
 import { PageContext } from '@/app/accounts/page';
 
 
@@ -26,18 +26,23 @@ export const FinanceTableCard = ({
   useEffect(() => {
     (async () => {
       const newTransactions = await getTransactionsByAccountWithinMonth(context.year, context.month+1, context.accountData.id)
-      console.log(newTransactions)
 
       setTransactions(newTransactions);
     })()
   }, [context.month, context.year, context.reload])
 
   return <Card className={cn('p-8 gap-5', className)}>
-    <h2 className='text-3xl font-bold'>Transactions:</h2>
+    <h2 className='text-3xl font-bold'>Transactions</h2>
     <DataTable 
-      columns={getColumns(context.accountData.currency, transactions, setTransactions)} 
+      columns={getColumns(context.accountData.currency, transactions, (d) => {
+        context.toggleReload();
+        setTransactions(d)
+      })} 
       data={transactions} 
-      setData={setTransactions} 
+      setData={(d) => {
+        context.toggleReload();
+        setTransactions(d)
+      }} 
       account={context.accountData}
       currentMonth={context.month+1}
       currentYear={context.year}

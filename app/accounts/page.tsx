@@ -1,11 +1,11 @@
 'use client'
 
-import { AICard } from '@/components/aicard/aicard';
-import { getColumns } from '@/components/financetablecard/columns';
-import { DataTable } from '@/components/financetablecard/data-table';
-import { FinanceTableCard } from '@/components/financetablecard/financetablecard';
+import { AICard } from '@/components/datacards/aicard/aicard';
+import { getColumns } from '@/components/datacards/financetablecard/columns';
+import { DataTable } from '@/components/datacards/financetablecard/data-table';
+import { FinanceTableCard } from '@/components/datacards/financetablecard/financetablecard';
 import { Loading } from '@/components/loading';
-import { TotalCard } from '@/components/totalcard/totalcard';
+import { TotalCard } from '@/components/datacards/totalcard/totalcard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,9 @@ import { getCurrencySymbol, getMonthAbbreviation, getMonthName, mod } from '@/li
 import assert from 'assert';
 import { useSearchParams } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react';
+import { WealthDevelopmentCard } from '@/components/analyticscards/developmentcard/wealthdevelopmentcard';
+import { MonthlyDevelopmentCard } from '@/components/analyticscards/developmentcard/monthlydevelopmentcard';
+import { CategoryCard } from '@/components/analyticscards/categorycard/categorycard';
 
 export const ACCOUNT_PARAM = "account"
 
@@ -59,7 +62,6 @@ export default function Account() {
     (async () => {
       const loadedAccountData = await getAccount(parseInt(accountId));
       setAccountData(loadedAccountData);
-      console.log(loadedAccountData);
       setLoading(false);
     })();
 
@@ -70,15 +72,18 @@ export default function Account() {
   } else {
     return <>
     <div className='flex flex-col gap-7'>
-      <Tabs defaultValue='monthly'>
         <div className='flex justify-between items-end mb-10'>
           <h1 className='text-4xl font-bold'>{accountData.title}</h1>
-          <TabsList>
-            <TabsTrigger value='monthly'>Monthly</TabsTrigger>
-            <TabsTrigger value='total'>Total</TabsTrigger>
-          </TabsList>
         </div>
-        <TabsContent value='monthly' className='flex flex-col gap-5'>
+
+        <PageContext.Provider value={{
+              month: currentMonth,
+              year: currentYear,
+              reload: reload,
+              accountData: accountData,
+              toggleReload: () => setReload(!reload)
+            }}>
+        <div className='flex flex-col gap-5'>
         <section className='flex justify-start items-center gap-2'>
           <p className='text-muted-foreground'>Currently Viewing:</p>
           <div className='w-fit flex flex-col items-end'>
@@ -115,9 +120,7 @@ export default function Account() {
                         setCurrentMonth(month-1)
 
                       } catch {
-
                         setSelectedDate(`${currentMonth+1}/${currentYear}`)
-
                       }
 
                     }}>
@@ -144,30 +147,18 @@ export default function Account() {
               </Pagination>
             </div>
         </section>
-        <PageContext.Provider value={{
-              month: currentMonth,
-              year: currentYear,
-              reload: reload,
-              accountData: accountData,
-              toggleReload: () => setReload(!reload)
-            }}>
           <section>
-            <h2 className='text-2xl font-medium mb-3'>Data</h2>
-            <div className='h-min grid grid-cols-4 grid-rows-3 grid-flow-dense gap-5'>
-                <FinanceTableCard className='col-span-3 row-span-3' />
-                <TotalCard className='row-span-1' />
-                <AICard className='row-span-1' />
+            <div className='h-min grid grid-cols-4 grid-rows-2 grid-flow-dense gap-5'>
+                <FinanceTableCard className='col-span-3 row-span-2 h-fit' />
+                <TotalCard className='row-span-1 ' />
+                <AICard className='row-span-1 ' />
+                <MonthlyDevelopmentCard className='col-span-2 row-span-4 h-fit' />
+                <CategoryCard className='col-span-1 row-span-2 h-fit' title='Expenses' type='expenses'/>
+                <CategoryCard className='col-span-1 row-span-2 h-fit' title='Earnings' type='earnings'/>
             </div>
           </section>
-          <section>
-            <h2 className='text-2xl font-medium mb-3'>Analytics</h2>
-          </section>
+        </div>
         </PageContext.Provider>
-        </TabsContent>
-        <TabsContent value='total'>
-
-        </TabsContent>
-      </Tabs>
     </div>
     </>
   }

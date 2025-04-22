@@ -34,7 +34,6 @@ export async function initDB() {
       month INTEGER NOT NULL CHECK(month <= 12 AND month >= 1),
       year INTEGER NOT NULL,
       account_id INTEGER,
-
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
       PRIMARY KEY (month, year, account_id)
     );
@@ -105,6 +104,7 @@ export type totalList = total[]
 
 export async function getTotalByAccountAndMonth(month: number, year: number, account_id: number) {
   const result = await db.select("SELECT total, month, year, account_id FROM total_history WHERE (month=$1 AND year=$2 AND account_id=$3)", [month, year, account_id])
+  console.log(result);
   const typedResult = (result as totalList);
   if (typedResult.length > 0) {
     return typedResult[0];
@@ -114,10 +114,16 @@ export async function getTotalByAccountAndMonth(month: number, year: number, acc
 
 }
 
+export async function getTotalsByAccountAndYear(year: number, account_id: number) {
+  console.log(account_id)
+  const result = await db.select("SELECT total, month, year, account_id FROM total_history WHERE account_id=$1 AND year=$2", [account_id, year])
+  console.log(result);
+  const typedResult = (result as totalList);
+  return typedResult;
+}
+
+
 export async function setTotalByAccountAndMonth(month: number, year: number, account_id: number, total: number) {
-
-  
-
   await db.execute("INSERT INTO total_history (total, account_id, month, year) VALUES ($1, $2, $3, $4) ON CONFLICT(month, year, account_id) DO UPDATE SET total = excluded.total", [total, account_id, month, year])
 }
 
@@ -147,6 +153,38 @@ export async function getTransactionsByAccountWithinMonth(year: number, month: n
   const results = await db.select("SELECT id, strftime('%d.%m.%Y', date) as date, value, description, type FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3)", [account_id, pad0(month.toString()), year.toString()])
   return results as transactionList;
 }
+
+export type transactionsByDay = {
+  day: number,
+  sum: number,
+}
+export async function getTransactionsByAccountWithinMonthGroupedByDay(year: number, month: number, account_id: number) {
+  const results = await db.select("SELECT strftime('%d', date) as day, sum(value) as sum FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3) GROUP BY day", [account_id, pad0(month.toString()), year.toString()]);
+  return results as transactionsByDay[];
+}
+
+export type transactionsByType = {
+  type: string,
+  sum: number
+}
+export async function getTransactionsByAccountWithinMonthGroupedByType(year: number, month: number, account_id: number, context: "earnings" | "expenses") {
+  let results;
+  if (context == "earnings") {
+    results = await db.select("SELECT type, sum(value) as sum FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3 AND (value >= 0)) GROUP BY type", [account_id, pad0(month.toString()), year.toString()]);
+  } else {
+    results = await db.select("SELECT type, sum(value) as sum FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3 AND (value <= 0)) GROUP BY type", [account_id, pad0(month.toString()), year.toString()]);
+  }
+  return results as transactionsByType[];
+}
+
+export type transactionSum = {
+  sum: number
+}
+export async function getTransactionsByAccountWithinMonthSummedUp(year: number, month: number, account_id: number) {
+  const result = await db.select("SELECT sum(value) as sum FROM transaction_history WHERE (account_id=$1 AND strftime('%m', date) == $2 AND strftime('%Y', date) == $3)", [account_id, pad0(month.toString()), year.toString()]);
+  return (result as transactionSum[])[0]
+}
+
 
 export async function getTransactionsWithinMonth(year: number, month: number) {
   // precondition: month is in normal notation, not index

@@ -1,11 +1,11 @@
-import { DialogContent, DialogTitle, DialogTrigger, DialogClose, DialogHeader, DialogFooter } from "../ui/dialog";
-import { Dialog } from "../ui/dialog";
-import { Input } from "../ui/input";
+import { DialogContent, DialogTitle, DialogTrigger, DialogClose, DialogHeader, DialogFooter } from "../../ui/dialog";
+import { Dialog } from "../../ui/dialog";
+import { Input } from "../../ui/input";
 import { ReactNode, useEffect, useState } from "react";
-import { Combobox } from "../ui/combobox";
+import { Combobox } from "../../ui/combobox";
 import { getTransactionTypes, transactionTypeList } from "@/lib/db/sqlite";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
+import { Label } from "../../ui/label";
+import { Button } from "../../ui/button";
 import { toast } from "sonner";
 import { convertToDate, convertToISO8601, pad0 } from "@/lib/utils";
 
@@ -90,9 +90,6 @@ export const TransactionDialog = ({
           const descValue = document.querySelector<HTMLInputElement>("#Description")?.value;
           const type = selectedType;
 
-          console.log(dateValue);
-          console.log(valueValue);
-          console.log(descValue);
 
           if (valid(dateValue, valueValue, descValue, type)) {
             

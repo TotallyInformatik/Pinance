@@ -30,7 +30,6 @@ export const Combobox = ({
         aria-expanded={open}
         className="justify-between"
         onClick={() => {
-          console.log("toggle", open)
           setOpen(!open)
         }}
       >

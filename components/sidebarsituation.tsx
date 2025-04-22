@@ -75,12 +75,6 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem className="w-full">
-              <SidebarMenuButton className="flex items-center" onClick={() => router.push("/settings")}>
-                <Settings/>
-                <p>Settings</p>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem className="w-full">
               <SidebarMenuButton className="flex items-center" onClick={() => router.push("/files")}>
                 <Files/>
                 <p>Files</p>

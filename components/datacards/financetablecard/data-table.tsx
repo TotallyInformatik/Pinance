@@ -21,15 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "../ui/button"
+import { Button } from "../../ui/button"
 import { Dispatch, SetStateAction, useEffect, useState } from "react"
-import { Input } from "../ui/input"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { Input } from "../../ui/input"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../../ui/dropdown-menu"
 import { ChevronDown, MoreHorizontal, Plus } from "lucide-react"
 import { account, addTransaction, getTransactionTypes, transaction } from "@/lib/db/sqlite"
 import { TransactionDialog } from "./transactiondialog"
-import { convertToDate, convertToISO8601 } from "@/lib/utils"
-import { Separator } from "../ui/separator"
+import { cn, convertToDate, convertToISO8601 } from "@/lib/utils"
+import { Separator } from "../../ui/separator"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -114,14 +114,21 @@ export function DataTable<TData, TValue>({
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex flex-col justify-between rounded-md border pb-0 min-h-[500px]">
+      <div className="flex flex-col justify-between rounded-[10px] border pb-0 min-h-[500px]">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted z-10" style={{
+            borderRadius: "50%"
+          }}>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, idx) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={
+                      cn(
+                        idx == headerGroup.headers.length-1 && "rounded-tr-[9px]",
+                        idx == 0 && "rounded-tl-[9px]" 
+                      )
+                    }>
                     {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -134,7 +141,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="**:data-[slot=table-cell]:first:w-8">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
@@ -142,7 +149,6 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => {
-                    console.log(row.original) // todo: using this, we can get the original id
                     return <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -167,7 +173,6 @@ export function DataTable<TData, TValue>({
               (async () => {
                 const newId = await addTransaction(v.date, v.value, v.type, v.description, account.id);
                 const date = convertToDate(convertToISO8601(v.date))
-                console.log(convertToISO8601(v.date));
 
 
                 if ((date.getMonth() + 1) == currentMonth && date.getFullYear() == currentYear) {
