@@ -103,8 +103,6 @@ export function CategoryCard(
         <h2 className='mt-0 text-3xl font-bold justify-self-start'>{total.toFixed(2) + context.accountData.currency}</h2>
       </div>
       <CardContent>
-        {/* todo: WHY THE FUCK? WHY DO YOU HAVE TO put this inside of a card content to work?
-        The amount of retardation in shadcn is incredible... Fuck you recharts */}
       <ChartContainer
           config={chartConfig}
           className="mx-auto aspect-square max-h-[250px]"

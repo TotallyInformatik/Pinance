@@ -10,11 +10,9 @@ export async function initDB() {
 
   db = await Database.load(DB_URL);
 
-  // todo: add balance attribute which the person just has to enter...
-  // todo: extract month and year selector out of card
-
   await db.execute(
-    `CREATE TABLE IF NOT EXISTS accounts (
+    `
+    CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY,
       currency TEXT NOT NULL,
       title TEXT NOT NULL UNIQUE
@@ -43,8 +41,6 @@ export async function initDB() {
     `
   )
 
-  // todo: migrations or smth. idk
-
 }
 
 
@@ -55,16 +51,6 @@ export type last_insert_rowid = {
 
 // #region Accounts
 
-export type shortAccount = {
-  title: string,
-  id: number,
-}
-export type shortAccountList = shortAccount[];
-export async function getAccountList() {
-  const result = await db.select("SELECT id, title FROM accounts");
-  return result;
-}
-
 
 export type account = {
   id: number,
@@ -72,20 +58,28 @@ export type account = {
   title: string,
 }
 export type accountList = account[];
+export async function getAccountList() {
+  const result = await db.select("SELECT id, currency, title FROM accounts");
+  return result;
+}
 
 export async function getAccount(id: number) {
-  const result = await db.select("SELECT id, currency, title, total FROM accounts WHERE id = $1", [id]);
+  const result = await db.select("SELECT id, currency, title FROM accounts WHERE id = $1", [id]);
   return (result as accountList)[0];
 }
 
-export async function addAccount(title: string, currency: string = DEFAULT_CURRENCY, total: number = 0) {
-  await db.execute("INSERT INTO accounts (currency, title, total) VALUES ($1, $2, $3)", [currency, title, total]);
-  const result = await db.select("SELECT id, title FROM accounts WHERE title = $1", [title])
-  return (result as shortAccountList)[0];
+export async function addAccount(title: string, currency: string) {
+  await db.execute("INSERT INTO accounts (currency, title) VALUES ($1, $2)", [currency, title]);
+  const result = await db.select("SELECT id, title, currency FROM accounts WHERE title = $1", [title])
+  return (result as accountList)[0];
 }
 
 export async function removeAccountById(id: number) {
   await db.execute("DELETE FROM accounts WHERE id = $1", [id]);
+}
+
+export async function setAccount(id: number, currency: string, name: string) {
+  await db.execute("UPDATE accounts SET currency=$2, title=$3 WHERE id=$1", [id, currency, name])
 }
 
 // #endregion

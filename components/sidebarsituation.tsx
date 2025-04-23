@@ -1,7 +1,7 @@
 'use client'
 import { ReactNode, useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
-import { BadgeEuro, Ellipsis, Files, LayoutDashboard, Menu, Plus, Settings, SwissFranc } from "lucide-react";
+import { BadgeEuro, DollarSign, Ellipsis, Euro, Files, LayoutDashboard, Menu, Plus, PoundSterling, Settings, SwissFranc } from "lucide-react";
 import { ThemeToggler } from "./themetoggler";
 import { Button } from "./ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "./ui/input";
-import { shortAccount, addAccount, getAccountList, removeAccountById } from "@/lib/db/sqlite";
+import { account, addAccount, getAccountList, removeAccountById, setAccount } from "@/lib/db/sqlite";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 import { ScrollArea } from "./ui/scroll-area";
@@ -17,11 +17,16 @@ import { toast } from "sonner";
 import { Separator } from "./ui/separator";
 import { useRouter } from "next/navigation";
 import { ACCOUNT_PARAM } from "@/app/accounts/page";
+import { DialogTitle,Dialog,DialogClose,DialogContent, DialogFooter, DialogHeader, DialogTrigger  } from "@/components/ui/dialog";
+import { Label } from "./ui/label";
+import { Combobox } from "./ui/combobox";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/utils";
 
 export const SidebarSituation = ({children} : {children: ReactNode}) => {
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [accounts, setAccounts] = useState<shortAccount[]>([]);
+  const [accounts, setAccounts] = useState<account[]>([]);
+  const [reload, setReload] = useState<boolean>(false);
   const router = useRouter();
 
   const formSchema = z.object({
@@ -37,10 +42,10 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (accounts.some((account: shortAccount) => { return account.title == values.title })) {
+    if (accounts.some((account: account) => { return account.title == values.title })) {
       toast.error("Error: Account with the same name already exists.")
     } else {
-      const result = await addAccount(values.title);
+      const result = await addAccount(values.title, DEFAULT_CURRENCY);
       accounts.push(result);
       setAccounts([...accounts])
     }
@@ -48,22 +53,26 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
 
   async function removeAccount(id: number) {
     await removeAccountById(id);
-    const newAccounts = accounts.filter((account: shortAccount) => { return account.id != id; });
+    const newAccounts = accounts.filter((account: account) => { return account.id != id; });
     setAccounts([...newAccounts])
   }
 
 
   useEffect(() => {
     (async () => {
-      const newAccounts = (await getAccountList()) as shortAccount[];
+      const newAccounts = (await getAccountList()) as account[];
       setAccounts(newAccounts);
     })()
-  }, [])
-  
-  // todo: icon changes based on currency of account.
+  }, [reload])
 
 
-
+  const CURRENCY_TO_LOGO: Record<string, ReactNode> = {
+    "EUR": <Euro />,
+    "CHF": <SwissFranc />,
+    "GBP": <PoundSterling/>,
+    "USD": <DollarSign />,
+    "CAD": <DollarSign />,
+  }
 
   return <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
     <Sidebar collapsible="offcanvas" variant="inset">
@@ -100,23 +109,33 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
                         }
                       }
                     >
-                      <SwissFranc/><p>{account.title}</p>
+                      {
+                        CURRENCY_TO_LOGO[account.currency]
+                      }
+                      <p>{account.title}</p>
                     </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction>
-                          <Ellipsis/>
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="right" align="start">
-                        <DropdownMenuItem onClick={() => removeAccount(account.id)}>
-                          <span>Delete Account</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <span>Edit Account</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Dialog>
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                          <SidebarMenuAction>
+                            <Ellipsis/>
+                          </SidebarMenuAction>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="right" align="start">
+                          <DropdownMenuItem onClick={() => removeAccount(account.id)}>
+                            <span>Delete Account</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <DialogTrigger>
+                              <span>Edit Account</span>
+                            </DialogTrigger>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <DialogStuff account={account} onDone={() => {
+                        setReload(!reload)
+                      }}/>
+                    </Dialog>
                   </SidebarMenuItem>
                 </div>
               })
@@ -178,4 +197,55 @@ export const SidebarSituation = ({children} : {children: ReactNode}) => {
       </div>
     </SidebarInset>
   </SidebarProvider>
+}
+
+const DialogStuff = ({account, onDone}: {account: account, onDone: () => void}) => {
+  
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(account.currency);
+
+  console.log(account)
+
+  return <DialogContent>
+      <DialogHeader>
+      <DialogTitle>
+        Edit Account
+      </DialogTitle>
+    </DialogHeader>
+    <form className="p-2 w-full gap-2 justify-between">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <Label>Name</Label>
+          <Input id={`bankname-${account.id}`} placeholder="ABCBank" defaultValue={account.title} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label>Currency</Label>
+          <Combobox
+            items={CURRENCIES.map(curr => {
+              return {
+                label: curr,
+                value: curr
+              }
+            })}
+            onValueChange={setSelectedCurrency}
+            defaultValue={account.currency}
+          />
+        </div>
+      </div>
+    </form>
+    <DialogFooter>
+      <DialogClose type="submit" asChild onClick={(e) => {
+        const name = document.querySelector<HTMLInputElement>(`#bankname-${account.id}`)?.value;
+        if (name && selectedCurrency) {
+          (async () => {
+            await setAccount(account.id, selectedCurrency, name);
+            onDone();
+          })()
+        }
+      }}>
+        <Button type="button" variant="secondary">
+          Done
+        </Button>
+      </DialogClose>
+    </DialogFooter>
+  </DialogContent>
 }

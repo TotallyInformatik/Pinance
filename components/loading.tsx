@@ -1,4 +1,3 @@
-// todo: improve this so that it actually does a cool little animation
 
 import { LoaderCircle } from "lucide-react"
 

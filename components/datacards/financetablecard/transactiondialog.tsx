@@ -43,9 +43,33 @@ export const TransactionDialog = ({
     })()
   }, [])
 
-  const valid = (date: string | undefined, value: string | undefined, description: string | undefined, type: string | undefined) => {
-    // todo    
-    return date && value && description && type;
+  const validate = (date: string | undefined, value: string | undefined, description: string | undefined, type: string | undefined) => {
+
+    if (!(date && value && type)) return false;
+
+    try {
+
+      if (isNaN(parseFloat(value))) return false
+
+
+      const parts = date.split(".")
+      if (parts.length !== 3) return false;
+      const d = parseInt(parts[0]);
+      const m = parseInt(parts[1]);
+      const y = parseInt(parts[2]);
+
+      const rd = new Date(y, m-1, d, 20, 0, 0);
+      console.log(rd.getFullYear())
+      console.log(rd.getMonth())
+      console.log(rd.getDate())
+      if (rd.getFullYear() != y || rd.getDate() != d || rd.getMonth() != m-1) return false
+
+      return true;
+
+    } catch {
+      return false;
+    }
+
   }
 
   const content = <DialogContent>
@@ -91,7 +115,7 @@ export const TransactionDialog = ({
           const type = selectedType;
 
 
-          if (valid(dateValue, valueValue, descValue, type)) {
+          if (validate(dateValue, valueValue, descValue, type)) {
             
             if (dateValue) {
               const parts = dateValue.split(".")

@@ -7,6 +7,7 @@ import { Button } from "../../ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose, DialogFooter, DialogHeader } from "../../ui/dialog";
 import { Input } from "../../ui/input";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const TotalCard = ({
   className
@@ -29,8 +30,8 @@ export const TotalCard = ({
     }) ()
   }, [context.month, context.year, context.reload])
 
-  const valid = (balance: string) => {
-    return true 
+  const validate = (balance: string) => {
+    return !isNaN(parseFloat(balance))
   }
 
   return <Card className={cn("p-8 gap-10", className)}>
@@ -58,12 +59,15 @@ export const TotalCard = ({
             <Input id="finalbalance" placeholder="--.--" defaultValue={total} />
           </form>
           <DialogFooter className="sm:justify-end">
-            <DialogClose asChild onClick={async () => {
+            <DialogClose asChild onClick={async (e) => {
               const balance = document.querySelector<HTMLInputElement>("#finalbalance")?.value;
-              if (balance && valid(balance)) {
-                const balanceAsNumber = parseFloat(balance);
+              if (balance && validate(balance)) {
+                const balanceAsNumber = parseFloat(parseFloat(balance).toFixed(2));
                 await setTotalByAccountAndMonth(context.month, context.year, context.accountData.id, balanceAsNumber);
                 setTotal(balanceAsNumber)
+              } else {
+                toast.error("Error: Invalid Input")
+                e.preventDefault();
               }
             }}>
               <Button type="button" variant="secondary">
